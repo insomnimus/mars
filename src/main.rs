@@ -56,7 +56,7 @@ struct RenderOptions {
 	script: Vec<String>,
 
 	/// Append raw HTML into <head>
-	#[arg(short = 'H', long, default_value_t = String::new())]
+	#[arg(short = 'H', long, default_value_t = String::new(), hide_default_value = true)]
 	head: String,
 }
 
