@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+{% for x in opts.css %}
+	<link rel="stylesheet" href="{{ x }}" type="text/css">
+{%- endfor %}
+{% for x in opts.script %}
+	<script src="{{ x }}"></script>
+{% endfor %}
+	{{ opts.head|trim|safe}}
+</head>
+
+<body>
+	{{ body|safe }}
+</body>
+</html>
