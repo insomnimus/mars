@@ -13,7 +13,7 @@ Grab a binary from [the releases page](https://github.com/insomnimus/mars/releas
 
 Or build from source:
 ## Building From Source
-You only need an up to date working installation of Rust.
+You need a working rost toolchain version 1.64.0 or newer.
 
 ```shell
 # The file will be located in `target/release/mars` (with a .exe suffix on Windows)
