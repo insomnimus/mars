@@ -9,7 +9,10 @@ use std::{
 		Read,
 		Write,
 	},
-	path::Path,
+	path::{
+		Path,
+		PathBuf,
+	},
 	process,
 };
 
@@ -33,14 +36,14 @@ use pulldown_cmark::{
 struct Cmd {
 	/// Write output to a file
 	#[arg(short, long, group = "output")]
-	out: Option<String>,
+	out: Option<PathBuf>,
 	/// Write all converted html files into a directory
 	#[arg(short = 'O', long, group = "output")]
-	out_dir: Option<String>,
+	out_dir: Option<PathBuf>,
 
 	/// Path to a single directory or one or more markdown files
 	#[arg(required = true)]
-	path: Vec<String>,
+	path: Vec<PathBuf>,
 
 	#[command(flatten)]
 	opts: RenderOptions,
@@ -70,11 +73,15 @@ struct Doc<'o, 'b> {
 fn run() -> Result<()> {
 	let c = Cmd::parse();
 	if let Some(dir) = &c.out_dir {
-		convert_to_dir(dir, &c.opts, &c.path)
+		if c.path.len() == 1 && c.path[0].is_dir() {
+			convert_dir(dir, &c.opts, &c.path[0])
+		} else {
+			convert_all(dir, &c.opts, &c.path)
+		}
 	} else if c.path.len() != 1 {
 		bail!("cannot write multiple files into one; use the --out-dir option instead");
 	} else {
-		let data = if &c.path[0] == "-" {
+		let data = if c.path[0].as_os_str() == "-" {
 			let mut buf = String::with_capacity(8 << 10);
 			io::stdin().lock().read_to_string(&mut buf)?;
 			buf
@@ -84,14 +91,14 @@ fn run() -> Result<()> {
 
 		let mut file;
 		let mut stdout;
-		let out: &mut dyn Write = match c.out.as_deref() {
-			Some("-") | None => {
-				stdout = io::stdout().lock();
-				&mut stdout
-			}
-			Some(p) => {
+		let out: &mut dyn Write = match c.out.as_ref() {
+			Some(p) if p.as_os_str() != "-" => {
 				file = File::create(p)?;
 				&mut file
+			}
+			_ => {
+				stdout = io::stdout().lock();
+				&mut stdout
 			}
 		};
 
@@ -114,52 +121,40 @@ fn to_html(buf: &mut String, md: &str) {
 	html::push_html(buf, parser);
 }
 
-fn convert_to_dir<D: AsRef<Path>, F: AsRef<Path>>(
-	dir: D,
-	opts: &RenderOptions,
-	files: &[F],
-) -> Result<()> {
-	let dir = dir.as_ref();
+fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()> {
 	fs::create_dir_all(dir)?;
+	let mut buf = String::with_capacity(8 << 10);
+	for p in files.iter() {
+		let mut out = dir.join(
+			p.file_name()
+				.ok_or_else(|| anyhow!("cannot determine the file name for {}", p.display()))?,
+		);
+		out.set_extension("html");
+		let data = fs::read_to_string(p)
+			.map_err(|e| anyhow!("failkure reading file {}: {}", p.display(), e))?;
+		let mut file = BufWriter::new(
+			File::create(&out)
+				.map_err(|e| anyhow!("failure writing to {}: {}", out.display(), e))?,
+		);
 
-	// If files contains a single directory, recursively find .md files, preserving
-	// the filesystem hierarchy
-	if files.len() == 1 && files[0].as_ref().is_dir() {
-		convert_dir(dir, opts, files[0].as_ref())?;
-	} else {
-		// Else write all files to dir
-		let mut buf = String::with_capacity(8 << 10);
-		for p in files.iter().map(AsRef::as_ref) {
-			let mut out = dir
-				.join(p.file_name().ok_or_else(|| {
-					anyhow!("cannot determine the file name for {}", p.display())
-				})?);
-			out.set_extension("html");
-			let data = fs::read_to_string(p)
-				.map_err(|e| anyhow!("failkure reading file {}: {}", p.display(), e))?;
-			let mut file = BufWriter::new(
-				File::create(&out)
-					.map_err(|e| anyhow!("failure writing to {}: {}", out.display(), e))?,
-			);
-
-			buf.clear();
-			to_html(&mut buf, &data);
-			let doc = Doc { opts, body: &buf };
-			doc.write_into(&mut file)?;
-			file.flush()?;
-			println!("{}", out.display());
-		}
+		buf.clear();
+		to_html(&mut buf, &data);
+		let doc = Doc { opts, body: &buf };
+		doc.write_into(&mut file)?;
+		file.flush()?;
+		println!("{}", out.display());
 	}
 
 	Ok(())
 }
 
 fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path) -> Result<()> {
+	fs::create_dir_all(out)?;
 	let mut buf = String::with_capacity(8 << 10);
 	for entry in WalkDir::new(dir)
 		.into_iter()
 		.flatten()
-		.filter(|x| x.file_type().is_file())
+		.filter(|x| x.file_type.is_file() && x.file_name.as_encoded_bytes().ends_with(b".md"))
 	{
 		let p = entry.path();
 		let mut to =
