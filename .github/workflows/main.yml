@@ -81,7 +81,7 @@
               "name": "mars-x86_64-unknown-linux-musl.tar.xz",
               "target": "x86_64-unknown-linux-musl",
               "os": "ubuntu-latest",
-              "native": true
+              "native": false
             },
             {
               "name": "mars-i686-unknown-linux-musl.tar.xz",
@@ -163,7 +163,7 @@
         {
           "name": "setup rustup (native)",
           "if": "matrix.native",
-          "run": "rustup target add ${{ matrix.target }}\nrustup update\nrustup component add rust-src"
+          "run": "rustup target add ${{ matrix.target }}\nrustup default nightly\nrustup component add rust-src"
         },
         {
           "name": "setup rustup (cross)",
@@ -173,7 +173,7 @@
         {
           "name": "build (native)",
           "if": "matrix.native",
-          "run": "cargo rustc --release --target ${{ matrix.target }} -- -Clto -Copt-level=2"
+          "run": "cargo rustc --release --target ${{ matrix.target }} -Z 'build-std=std,alloc,core,panic_abort' -- -Clto -Copt-level=2"
         },
         {
           "name": "build (cross)",
