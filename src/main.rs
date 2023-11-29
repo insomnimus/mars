@@ -124,21 +124,27 @@ fn to_html(buf: &mut String, md: &str) {
 fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()> {
 	fs::create_dir_all(dir)?;
 	let mut buf = String::with_capacity(8 << 10);
+	let mut file_buf = String::with_capacity(8 << 10);
+
 	for p in files.iter() {
 		let mut out = dir.join(
 			p.file_name()
 				.ok_or_else(|| anyhow!("cannot determine the file name for {}", p.display()))?,
 		);
 		out.set_extension("html");
-		let data = fs::read_to_string(p)
+
+		file_buf.clear();
+		File::open(p)
+			.and_then(|mut f| f.read_to_string(&mut file_buf))
 			.map_err(|e| anyhow!("failure reading file {}: {}", p.display(), e))?;
+
 		let mut file = BufWriter::new(
 			File::create(&out)
 				.map_err(|e| anyhow!("failure writing to {}: {}", out.display(), e))?,
 		);
 
 		buf.clear();
-		to_html(&mut buf, &data);
+		to_html(&mut buf, &file_buf);
 		let doc = Doc { opts, body: &buf };
 		doc.write_into(&mut file)?;
 		file.flush()?;
@@ -151,6 +157,7 @@ fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()
 fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path) -> Result<()> {
 	fs::create_dir_all(out)?;
 	let mut buf = String::with_capacity(8 << 10);
+	let mut file_buf = String::with_capacity(8 << 10);
 	for entry in WalkDir::new(dir)
 		.into_iter()
 		.flatten()
@@ -162,7 +169,10 @@ fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path) -> Result<()> {
 				anyhow!("error constructing target path for {}: {}", p.display(), e)
 			})?);
 		to.set_extension("html");
-		let data = fs::read_to_string(&p)
+
+		file_buf.clear();
+		File::open(&p)
+			.and_then(|mut f| f.read_to_string(&mut file_buf))
 			.map_err(|e| anyhow!("failure reading {}: {}", p.display(), e))?;
 
 		if let Some(parent) = to.parent() {
@@ -175,7 +185,7 @@ fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path) -> Result<()> {
 		);
 
 		buf.clear();
-		to_html(&mut buf, &data);
+		to_html(&mut buf, &file_buf);
 
 		let doc = Doc { opts, body: &buf };
 		doc.write_into(&mut file)?;
