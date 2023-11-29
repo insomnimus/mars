@@ -1,7 +1,7 @@
 [package]
 name = "mars"
 description = "A markdown to html converter"
-version = "0.4.2"
+version = "0.4.3"
 edition = "2021"
 license = "MIT"
 
@@ -9,10 +9,12 @@ license = "MIT"
 lto = "fat"
 panic = "abort"
 
+[profile.dev.package.askama_derive]
+opt-level = 1
 
 [dependencies]
 anyhow = "1.0.75"
-askama = "0.12.1"
+askama = { version = "0.12.1", default-features = false, features = ["urlencode"] }
 clap = { version = "4.4.10", features = ["derive", "cargo"] }
 jwalk = "0.8.1"
-pulldown-cmark = { version = "0.9.3", features = ["simd"] }
+pulldown-cmark = { version = "0.9.3", default-features = false, features = ["simd"] }
