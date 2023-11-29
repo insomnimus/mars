@@ -75,7 +75,7 @@ fn run() -> Result<()> {
 		bail!("cannot write multiple files into one; use the --out-dir option instead");
 	} else {
 		let data = if &c.path[0] == "-" {
-			let mut buf = String::with_capacity(4 << 10);
+			let mut buf = String::with_capacity(8 << 10);
 			io::stdin().lock().read_to_string(&mut buf)?;
 			buf
 		} else {
