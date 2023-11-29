@@ -72,7 +72,7 @@ fn run() -> Result<()> {
 	if let Some(dir) = &c.out_dir {
 		convert_to_dir(dir, &c.opts, &c.path)
 	} else if c.path.len() != 1 {
-		bail!("cannot write multiple fiels into one; use the --out-dir option instead");
+		bail!("cannot write multiple files into one; use the --out-dir option instead");
 	} else {
 		let data = if &c.path[0] == "-" {
 			let mut buf = String::with_capacity(4 << 10);
