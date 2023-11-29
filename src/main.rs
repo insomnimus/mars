@@ -26,6 +26,7 @@ use clap::Parser as ArgParser;
 use jwalk::WalkDir;
 use pulldown_cmark::{
 	html,
+	Event,
 	Options,
 	Parser,
 };
@@ -68,6 +69,10 @@ struct RenderOptions {
 	/// Append raw HTML into <head>
 	#[arg(short = 'H', long, default_value_t = String::new(), hide_default_value = true)]
 	head: String,
+
+	/// Turn newlines into hard breaks
+	#[arg(long)]
+	hard_breaks: bool,
 }
 
 #[derive(Template)]
@@ -110,7 +115,7 @@ fn run() -> Result<()> {
 		};
 
 		let mut body = String::with_capacity(8 << 10);
-		to_html(&mut body, &data);
+		to_html(&mut body, &data, c.opts.hard_breaks);
 
 		let doc = Doc {
 			opts: &c.opts,
@@ -123,8 +128,11 @@ fn run() -> Result<()> {
 	}
 }
 
-fn to_html(buf: &mut String, md: &str) {
-	let parser = Parser::new_ext(md, Options::all());
+fn to_html(buf: &mut String, md: &str, hard_breaks: bool) {
+	let parser = Parser::new_ext(md, Options::all()).map(|e| match e {
+		Event::SoftBreak if hard_breaks => Event::HardBreak,
+		other => other,
+	});
 	html::push_html(buf, parser);
 }
 
@@ -151,7 +159,7 @@ fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()
 		);
 
 		buf.clear();
-		to_html(&mut buf, &file_buf);
+		to_html(&mut buf, &file_buf, opts.hard_breaks);
 		let doc = Doc { opts, body: &buf };
 		doc.write_into(&mut file)?;
 		file.flush()?;
@@ -192,7 +200,7 @@ fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path) -> Result<()> {
 		);
 
 		buf.clear();
-		to_html(&mut buf, &file_buf);
+		to_html(&mut buf, &file_buf, opts.hard_breaks);
 
 		let doc = Doc { opts, body: &buf };
 		doc.write_into(&mut file)?;
