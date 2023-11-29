@@ -71,11 +71,11 @@ struct RenderOptions {
 	sakura_css: bool,
 
 	/// Append raw HTML into <head>
-	#[arg(short = 'H', long, default_value_t = String::new(), hide_default_value = true)]
+	#[arg(long, default_value_t = String::new(), hide_default_value = true)]
 	head: String,
 
 	/// Turn newlines into hard breaks
-	#[arg(long)]
+	#[arg(short = 'H', long)]
 	hard_breaks: bool,
 }
 
