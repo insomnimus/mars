@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="{{ opts.lang }}">
+{% match opts.lang %}
+	{%- when Some with (lang) -%} <html lang="{{ lang }}">
+	{%- when None -%} <html>
+{%- endmatch %}
 <head>
 	<meta charset="utf-8">
 {%- if opts.normalize_css %}

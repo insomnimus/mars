@@ -53,8 +53,8 @@ struct Cmd {
 #[derive(ArgParser)]
 struct RenderOptions {
 	/// Set the lang attribute of <html>
-	#[arg(short, long, default_value = "en")]
-	lang: String,
+	#[arg(short, long)]
+	lang: Option<String>,
 
 	/// Import CSS styles from a URL
 	#[arg(short, long)]
