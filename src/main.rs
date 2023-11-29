@@ -46,6 +46,10 @@ struct Cmd {
 	#[arg(required = true)]
 	path: Vec<PathBuf>,
 
+	/// Do not ignore hidden files and directories
+	#[arg(short, long)]
+	all: bool,
+
 	#[command(flatten)]
 	opts: RenderOptions,
 }
@@ -86,11 +90,19 @@ struct Doc<'o, 'b> {
 	body: &'b str,
 }
 
+fn to_html(buf: &mut String, md: &str, hard_breaks: bool) {
+	let parser = Parser::new_ext(md, Options::all()).map(|e| match e {
+		Event::SoftBreak if hard_breaks => Event::HardBreak,
+		other => other,
+	});
+	html::push_html(buf, parser);
+}
+
 fn run() -> Result<()> {
 	let c = Cmd::parse();
 	if let Some(dir) = &c.out_dir {
 		if c.path.len() == 1 && c.path[0].is_dir() {
-			convert_dir(dir, &c.opts, &c.path[0])
+			convert_dir(dir, &c.opts, &c.path[0], !c.all)
 		} else {
 			convert_all(dir, &c.opts, &c.path)
 		}
@@ -132,14 +144,6 @@ fn run() -> Result<()> {
 	}
 }
 
-fn to_html(buf: &mut String, md: &str, hard_breaks: bool) {
-	let parser = Parser::new_ext(md, Options::all()).map(|e| match e {
-		Event::SoftBreak if hard_breaks => Event::HardBreak,
-		other => other,
-	});
-	html::push_html(buf, parser);
-}
-
 fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()> {
 	fs::create_dir_all(dir)?;
 	let mut buf = String::with_capacity(8 << 10);
@@ -173,11 +177,13 @@ fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()
 	Ok(())
 }
 
-fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path) -> Result<()> {
+fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path, skip_hidden: bool) -> Result<()> {
 	fs::create_dir_all(out)?;
 	let mut buf = String::with_capacity(8 << 10);
 	let mut file_buf = String::with_capacity(8 << 10);
+
 	for entry in WalkDir::new(dir)
+		.skip_hidden(skip_hidden)
 		.into_iter()
 		.flatten()
 		.filter(|x| x.file_type.is_file() && x.file_name.as_encoded_bytes().ends_with(b".md"))
