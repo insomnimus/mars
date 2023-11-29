@@ -1,0 +1,229 @@
+{
+  "name": "main",
+  "on": {
+    "push": {
+      "paths-ignore": [
+        "**.md",
+        "LICENSE"
+      ]
+    },
+    "pull_request": {
+      "paths-ignore": [
+        "**.md",
+        "LICENSE"
+      ]
+    }
+  },
+  "jobs": {
+    "test": {
+      "strategy": {
+        "matrix": {
+          "include": [
+            {
+              "os": "ubuntu-latest",
+              "target": "x86_64-unknown-linux-gnu"
+            },
+            {
+              "os": "macOS-11",
+              "target": "x86_64-apple-darwin"
+            },
+            {
+              "os": "windows-latest",
+              "target": "x86_64-pc-windows-msvc"
+            }
+          ]
+        }
+      },
+      "runs-on": "${{ matrix.os }}",
+      "steps": [
+        {
+          "name": "Setup | Checkout",
+          "uses": "actions/checkout@v3"
+        },
+        {
+          "name": "Check | Tests",
+          "run": "cargo test --target ${{ matrix.target }}"
+        }
+      ]
+    },
+    "build": {
+      "name": "Build Release Binaries",
+      "needs": "test",
+      "if": "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')",
+      "continue-on-error": true,
+      "strategy": {
+        "fail-fast": false,
+        "matrix": {
+          "include": [
+            {
+              "name": "mars-i686-pc-windows-msvc.zip",
+              "target": "i686-pc-windows-msvc",
+              "os": "windows-latest",
+              "native": true
+            },
+            {
+              "name": "mars-x86_64-pc-windows-msvc.zip",
+              "target": "x86_64-pc-windows-msvc",
+              "os": "windows-latest",
+              "native": true
+            },
+            {
+              "name": "mars-aarch64-pc-windows-msvc.zip",
+              "target": "aarch64-pc-windows-msvc",
+              "os": "windows-latest",
+              "native": true
+            },
+            {
+              "name": "mars-x86_64-unknown-linux-musl.tar.xz",
+              "target": "x86_64-unknown-linux-musl",
+              "os": "ubuntu-latest",
+              "native": true
+            },
+            {
+              "name": "mars-i686-unknown-linux-musl.tar.xz",
+              "target": "i686-unknown-linux-musl",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-aarch64-unknown-linux-musl.tar.xz",
+              "target": "aarch64-unknown-linux-musl",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-armv7-unknown-linux-musleabihf.tar.xz",
+              "target": "armv7-unknown-linux-musleabihf",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-arm-unknown-linux-musleabihf.tar.xz",
+              "target": "arm-unknown-linux-musleabihf",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-powerpc-unknown-linux-gnu.tar.xz",
+              "target": "powerpc-unknown-linux-gnu",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-powerpc64-unknown-linux-gnu.tar.xz",
+              "target": "powerpc64-unknown-linux-gnu",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-powerpc64le-unknown-linux-gnu.tar.xz",
+              "target": "powerpc64le-unknown-linux-gnu",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-x86_64-apple-darwin.tar.xz",
+              "target": "x86_64-apple-darwin",
+              "os": "macos-latest",
+              "native": true
+            },
+            {
+              "name": "mars-x86_64-unknown-freebsd.tar.xz",
+              "target": "x86_64-unknown-freebsd",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-x86_64-unknown-netbsd.tar.xz",
+              "target": "x86_64-unknown-netbsd",
+              "os": "ubuntu-latest",
+              "native": false
+            }
+          ]
+        }
+      },
+      "runs-on": "${{ matrix.os }}",
+      "steps": [
+        {
+          "name": "Setup | Checkout",
+          "uses": "actions/checkout@v3"
+        },
+        {
+          "name": "Setup | Cache Cargo",
+          "uses": "actions/cache@v3",
+          "with": {
+            "path": "~/.cargo/registry\n~/.cargo/git\n",
+            "key": "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}"
+          }
+        },
+        {
+          "name": "Setup | rustup native",
+          "if": "matrix.native",
+          "run": "rustup target add ${{ matrix.target }}\nrustup default nightly\nrustup component add rust-src"
+        },
+        {
+          "name": "Setup | rustup and cross",
+          "if": "!matrix.native",
+          "run": "cargo install cross"
+        },
+        {
+          "name": "Build | Native",
+          "if": "matrix.native",
+          "run": "cargo rustc --release --target ${{ matrix.target }} -Z 'build-std=std,core,alloc,panic_abort' -- -Clto -Copt-level=2"
+        },
+        {
+          "name": "Build | Cross",
+          "if": "!matrix.native",
+          "run": "cross rustc --release --target ${{ matrix.target }} -- -Clto -Copt-level=2"
+        },
+        {
+          "name": "PostBuild | Prepare",
+          "if": "matrix.os != 'windows-latest'",
+          "run": "cd target/${{ matrix.target }}/release\nstrip mars || true\ntar cJf ../../../${{ matrix.name }} mars\ncd -"
+        },
+        {
+          "name": "PostBuild | Prepare",
+          "if": "matrix.os == 'windows-latest'",
+          "run": "cd target/${{ matrix.target }}/release\n7z a ../../../${{ matrix.name }} mars.exe\ncd -"
+        },
+        {
+          "name": "Deploy | Upload Artifacts",
+          "uses": "actions/upload-artifact@v3",
+          "with": {
+            "name": "${{ matrix.name }}",
+            "path": "${{ matrix.name }}"
+          }
+        }
+      ]
+    },
+    "release": {
+      "name": "Create GitHub Release",
+      "needs": "build",
+      "if": "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')",
+      "runs-on": "ubuntu-latest",
+      "steps": [
+        {
+          "name": "checkout",
+          "uses": "actions/checkout@v3",
+          "with": {
+            "fetch-depth": 0
+          }
+        },
+        {
+          "name": "download artifacts",
+          "uses": "actions/download-artifact@v3",
+          "with": {
+            "path": "./artifacts"
+          }
+        },
+        {
+          "name": "create github release",
+          "env": {
+            "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+          },
+          "run": "gh release create ${{ github.ref_name }} ./artifacts/* --generate-notes --title ${{ github.ref_name }}"
+        }
+      ]
+    }
+  }
+}
