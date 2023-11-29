@@ -131,7 +131,7 @@ fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()
 		);
 		out.set_extension("html");
 		let data = fs::read_to_string(p)
-			.map_err(|e| anyhow!("failkure reading file {}: {}", p.display(), e))?;
+			.map_err(|e| anyhow!("failure reading file {}: {}", p.display(), e))?;
 		let mut file = BufWriter::new(
 			File::create(&out)
 				.map_err(|e| anyhow!("failure writing to {}: {}", out.display(), e))?,
@@ -151,7 +151,7 @@ fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()
 fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path) -> Result<()> {
 	fs::create_dir_all(out)?;
 	let mut buf = String::with_capacity(8 << 10);
-	for entry in WalkDir::new(dir)
+	for entry in WalkDir::new(dir)?
 		.into_iter()
 		.flatten()
 		.filter(|x| x.file_type.is_file() && x.file_name.as_encoded_bytes().ends_with(b".md"))
