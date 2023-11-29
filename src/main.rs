@@ -151,7 +151,7 @@ fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()
 fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path) -> Result<()> {
 	fs::create_dir_all(out)?;
 	let mut buf = String::with_capacity(8 << 10);
-	for entry in WalkDir::new(dir)?
+	for entry in WalkDir::new(dir)
 		.into_iter()
 		.flatten()
 		.filter(|x| x.file_type.is_file() && x.file_name.as_encoded_bytes().ends_with(b".md"))
