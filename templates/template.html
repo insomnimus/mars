@@ -2,16 +2,22 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-{% for x in opts.css %}
+	{% if opts.normalize_css -%}
+		<link rel="stylesheet" href="https://unpkg.com/normalize.css@8.0.1/normalize.css" type="text/css">
+	{%- endif %}
+	{% if opts.sakura_css -%}
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css">
+	{%- endif %}
+{% for x in opts.css -%}
 	<link rel="stylesheet" href="{{ x }}" type="text/css">
-{%- endfor %}
-{% for x in opts.script %}
+{% endfor %}
+{%- for x in opts.script -%}
 	<script src="{{ x }}"></script>
 {% endfor %}
-	{{ opts.head|trim|safe}}
+{{- opts.head|trim|safe}}
 </head>
 
 <body>
-	{{ body|safe }}
+{{ body|safe }}
 </body>
 </html>

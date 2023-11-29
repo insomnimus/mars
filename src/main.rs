@@ -58,6 +58,13 @@ struct RenderOptions {
 	#[arg(short, long)]
 	script: Vec<String>,
 
+	/// Import Normalize.css
+	#[arg(short = 'N', long)]
+	normalize_css: bool,
+	/// Import Sakura.css
+	#[arg(short = 'S', long)]
+	sakura_css: bool,
+
 	/// Append raw HTML into <head>
 	#[arg(short = 'H', long, default_value_t = String::new(), hide_default_value = true)]
 	head: String,
