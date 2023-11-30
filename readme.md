@@ -35,14 +35,22 @@ Additionally you can insert styling, scripts or otherwise any raw HTML into the 
 ```shell
 mars ./docs/ -O ./docs/html -c "https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css"
 # You can specify the -c option multiple times
+# There's a convenience flag for Sakura.css:
+mars ./docs/ -O ./docs/html --sakura-css
 ```
 
 ### Example: Convert all Markdown files in your home
 ```shell
-mars "$HOME" -O ./docs
+# The -a/--all flag makes mars not ignore hidden files and folders
+mars "$HOME" --all -O ./docs
 ```
 
 ### Example: Convert a single file
 ```shell
 mars ./readme.md -o ./readme.html
+```
+
+### Example: Read markdown from stdin
+```shell
+cat readme.md | mars -o readme.html -
 ```
