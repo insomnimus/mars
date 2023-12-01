@@ -1,4 +1,8 @@
 use std::{
+	borrow::Cow::{
+		self,
+		Borrowed,
+	},
 	fs::{
 		self,
 		File,
@@ -23,6 +27,7 @@ use anyhow::{
 };
 use askama::Template;
 use clap::Parser as ArgParser;
+use indexmap::IndexSet;
 use jwalk::WalkDir;
 use pulldown_cmark::{
 	html,
@@ -30,6 +35,7 @@ use pulldown_cmark::{
 	Options,
 	Parser,
 };
+use serde::Deserialize;
 
 #[derive(ArgParser)]
 #[command(version)]
@@ -85,9 +91,77 @@ struct RenderOptions {
 
 #[derive(Template)]
 #[template(path = "template.html")]
-struct Doc<'o, 'b> {
-	opts: &'o RenderOptions,
+struct Doc<'b, 'o> {
+	md: Metadata<'o>,
 	body: &'b str,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(default)]
+struct Metadata<'a> {
+	title: Option<Cow<'a, str>>,
+	lang: Option<Cow<'a, str>>,
+	css: IndexSet<Cow<'a, str>>,
+	script: IndexSet<Cow<'a, str>>,
+	head: Cow<'a, str>,
+	hard_breaks: Option<bool>,
+}
+
+impl<'b, 'a> Doc<'b, 'a> {
+	fn new(html: &'b mut String, source: &str, opts: &'a RenderOptions) -> Self {
+		const WHITESPACE: &[char] = &[' ', '\t', '\n', '\r'];
+		let s = source.trim_start_matches(WHITESPACE);
+
+		let (mut md, body) =
+			s.strip_prefix("---")
+				.filter(|s| s.starts_with('\n') || s.starts_with("\r\n"))
+				.and_then(|s| {
+					s.split_once("\n---").filter(|(_, body)| {
+						body.starts_with('\n')
+							|| body.starts_with("\r\n") || body.trim_matches(WHITESPACE).is_empty()
+					})
+				})
+				.and_then(|(md, body)| {
+					serde_yaml::from_str::<Metadata>(md)
+						.ok()
+						.map(|md| (md, body))
+				})
+				.unwrap_or_else(|| (Metadata::default(), s.trim_matches(WHITESPACE)));
+
+		let hard_breaks = md.hard_breaks.unwrap_or(opts.hard_breaks);
+
+		to_html(html, body, hard_breaks);
+
+		// Put normalize.css on top
+		if opts.normalize_css {
+			md.css.insert(Borrowed(
+				"https://unpkg.com/normalize.css@8.0.1/normalize.css",
+			));
+			md.css.move_index(md.css.len() - 1, 0);
+		}
+
+		md.css.extend(opts.css.iter().map(|x| Borrowed(x.as_str())));
+		md.script
+			.extend(opts.script.iter().map(|x| Borrowed(x.as_str())));
+
+		if md.head.is_empty() {
+			md.head = Borrowed(opts.head.as_str());
+		}
+		if md.lang.is_none() {
+			md.lang = opts.lang.as_deref().map(Borrowed);
+		}
+
+		if opts.sakura_css {
+			md.css.insert(Borrowed(
+				"https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css",
+			));
+		}
+
+		Self {
+			md,
+			body: html.trim_matches(WHITESPACE),
+		}
+	}
 }
 
 fn to_html(buf: &mut String, md: &str, hard_breaks: bool) {
@@ -131,12 +205,8 @@ fn run() -> Result<()> {
 		};
 
 		let mut body = String::with_capacity(8 << 10);
-		to_html(&mut body, &data, c.opts.hard_breaks);
 
-		let doc = Doc {
-			opts: &c.opts,
-			body: &body,
-		};
+		let doc = Doc::new(&mut body, &data, &c.opts);
 		let mut out = BufWriter::new(out);
 		doc.write_into(&mut out)?;
 		out.flush()?;
@@ -167,8 +237,7 @@ fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()
 		);
 
 		buf.clear();
-		to_html(&mut buf, &file_buf, opts.hard_breaks);
-		let doc = Doc { opts, body: &buf };
+		let doc = Doc::new(&mut buf, &file_buf, opts);
 		doc.write_into(&mut file)?;
 		file.flush()?;
 		println!("{}", out.display());
@@ -210,9 +279,8 @@ fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path, skip_hidden: bool) 
 		);
 
 		buf.clear();
-		to_html(&mut buf, &file_buf, opts.hard_breaks);
 
-		let doc = Doc { opts, body: &buf };
+		let doc = Doc::new(&mut buf, &file_buf, opts);
 		doc.write_into(&mut file)?;
 		file.flush()?;
 

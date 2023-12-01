@@ -3,6 +3,7 @@ Mars is a Markdown to HTML convertion tool.
 
 ## Features
 - Supports github flavoured markdown
+- Supports metadata blocks
 - Can convert an entire directory, preserving the filesystem hierarchy
 - Self contained and lean executable
 - Lets you insert custom CSS, scripts or raw HTML into `<head>`
@@ -54,3 +55,39 @@ mars ./readme.md -o ./readme.html
 ```shell
 cat readme.md | mars -o readme.html -
 ```
+
+## Metadata
+You can specify metadata on top of a markdown file. The format for the block is YAML.
+
+The below snippet demonstrates the usage and all the possible metadata fields:
+```markdown
+---
+title: Example Metadata Usage
+lang: en
+hard_breaks: true
+css: ["https://example.com/foo.css", "https://example.com/bar.css"]
+script: ["https://example.com/foo.js"]
+head: '<meta name="description" content="Demonstrate usage of metadata blocks!">'
+---
+
+Rest of your content goes here.
+```
+
+That is
+- A metadata block starts with `---`
+- and then a new line
+- then a YAML map containing key-value pairs
+- and it ends with a line containing only `---`
+
+Keys not shown above are simply ignored.
+
+If the text between `---` does not contain valid YAML, it is not considered a metadata block; it's rendered to HTML as Markdown.
+
+### Metadata Precedence
+- For keys that are not lists, values in the Markdown source take precedence.
+- For lists such as `css` and `script`, the values are combined into a single list without duplication
+	- Insertion order is preserved.
+	- The values specified on the command line are appended to values specified in the source.
+	- If the `--normalize-css` flag is used, the `Normalize.css` import will be put on top.
+	- If the `--sakura-css` flag is used, the `Sakura.css` import will be last.
+

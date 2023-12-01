@@ -1,23 +1,20 @@
 <!DOCTYPE html>
-{% match opts.lang %}
+{% match md.lang %}
 	{%- when Some with (lang) -%} <html lang="{{ lang }}">
 	{%- when None -%} <html>
 {%- endmatch %}
 <head>
 	<meta charset="utf-8">
-{%- if opts.normalize_css %}
-	<link rel="stylesheet" href="https://unpkg.com/normalize.css@8.0.1/normalize.css" type="text/css">
+{%- if let Some(title) = md.title %}
+	<title>{{ title }}</title>
 {%- endif %}
-{%- if opts.sakura_css %}
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css">
-{%- endif %}
-{%- for x in opts.css %}
+{%- for x in md.css %}
 	<link rel="stylesheet" href="{{ x }}" type="text/css">
 {%- endfor %}
-{%- for x in opts.script %}
+{%- for x in md.script %}
 	<script src="{{ x }}"></script>
 {%- endfor %}
-{{- opts.head|trim|safe}}
+{{- md.head|trim|safe}}
 </head>
 
 <body>
