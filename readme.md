@@ -5,6 +5,7 @@ Mars is a Markdown to HTML convertion tool.
 - Supports github flavoured markdown
 - Supports metadata blocks
 - Can convert an entire directory, preserving the filesystem hierarchy
+- While converting a directory, convert relative markdown links in documents to .html if the specified file exists
 - Self contained and lean executable
 - Lets you insert custom CSS, scripts or raw HTML into `<head>`
 - Minimal memory footprint
@@ -90,4 +91,3 @@ If the text between `---` does not contain valid YAML, it is not considered a me
 	- The values specified on the command line are appended to values specified in the source.
 	- If the `--normalize-css` flag is used, the `Normalize.css` import will be put on top.
 	- If the `--sakura-css` flag is used, the `Sakura.css` import will be last.
-
