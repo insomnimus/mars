@@ -233,6 +233,14 @@ fn is_in_dir(root: &Path, file_path: &Path, url: &str) -> bool {
 		.is_ok_and(|target| target.starts_with(root) && target.is_file())
 }
 
+fn has_hidden(url: &str) -> bool {
+	url.split('/').any(|s| match s.as_bytes() {
+		b".." | b"." => false,
+		[b'.', ..] => true,
+		_ => false,
+	})
+}
+
 fn run() -> Result<()> {
 	let c = Cmd::parse();
 	if let Some(dir) = &c.out_dir {
@@ -353,6 +361,9 @@ fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path, skip_hidden: bool) 
 				if opts.convert_base_urls || !dest.starts_with('/') =>
 			{
 				let (url, rest) = split_url(&dest);
+				if skip_hidden && has_hidden(url) {
+					return Event::Start(Tag::Link(typ, dest, title));
+				}
 				match url.strip_suffix(".md") {
 					Some(without_ext) if is_in_dir(&dir, &p, url) => Event::Start(Tag::Link(
 						typ,

@@ -24,3 +24,37 @@ fn test_split_url() {
 		assert_eq!((a, b), got, "\ninput: {s}");
 	}
 }
+
+#[test]
+fn test_has_hidden() {
+	let test_no = [
+		"",
+		".",
+		"..",
+		"/",
+		"a",
+		"a/b",
+		"./a",
+		"./a/..",
+		"../a",
+		".././a",
+		"a.b/c..d/",
+		"a/../b/./c",
+		"./../..",
+	];
+
+	let test_yes = [".a", "..a", "./.a", "../.a", "a.b/.c", "/.a"];
+
+	for s in test_no {
+		assert!(
+			!has_hidden(s),
+			"\nisn't hidden but found to be hidden:\ninput: {s}"
+		);
+	}
+	for s in test_yes {
+		assert!(
+			has_hidden(s),
+			"\nis hidden but found to be not:\ninput: {s}"
+		);
+	}
+}
