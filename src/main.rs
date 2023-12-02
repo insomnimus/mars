@@ -212,14 +212,13 @@ fn split_url(url: &str) -> (&str, &str) {
 
 /// `root` must be canonicalized.
 fn is_in_dir(root: &Path, file_path: &Path, url: &str) -> bool {
+	#[cfg(not(windows))]
 	if url.contains(':') {
 		return false;
 	}
 	#[cfg(windows)]
-	{
-		if is_illegal_filepath(url) {
-			return false;
-		}
+	if is_illegal_filepath(url) {
+		return false;
 	}
 
 	let parent = file_path.parent().unwrap_or(Path::new(""));
