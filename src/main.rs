@@ -1,3 +1,4 @@
+mod file_name;
 #[cfg(test)]
 mod tests;
 
@@ -5,6 +6,10 @@ use std::{
 	borrow::Cow::{
 		self,
 		Borrowed,
+	},
+	collections::{
+		btree_map::Entry,
+		BTreeMap,
 	},
 	fs::{
 		self,
@@ -32,6 +37,10 @@ use askama::Template;
 use clap::Parser as ArgParser;
 use indexmap::IndexSet;
 use jwalk::WalkDir;
+use normpath::{
+	BasePath,
+	BasePathBuf,
+};
 use pulldown_cmark::{
 	html,
 	Event,
@@ -40,6 +49,8 @@ use pulldown_cmark::{
 	Tag,
 };
 use serde::Deserialize;
+
+use self::file_name::FileName;
 
 #[derive(ArgParser)]
 #[command(version)]
@@ -211,7 +222,7 @@ fn split_url(url: &str) -> (&str, &str) {
 }
 
 /// `root` must be canonicalized.
-fn is_in_dir(root: &Path, file_path: &Path, url: &str) -> bool {
+fn is_in_dir(root: &BasePath, file_path: &Path, url: &str) -> bool {
 	#[cfg(not(windows))]
 	if url.contains(':') {
 		return false;
@@ -221,14 +232,20 @@ fn is_in_dir(root: &Path, file_path: &Path, url: &str) -> bool {
 		return false;
 	}
 
-	let parent = file_path.parent().unwrap_or(Path::new(""));
+	let Ok(file_path) = BasePath::new(file_path) else {
+		return false;
+	};
+	let Ok(Some(parent)) = file_path.parent() else {
+		return false;
+	};
+
 	let target = url
 		.strip_prefix('/')
 		.map(|rest| root.join(rest))
 		.unwrap_or_else(|| parent.join(url));
 
 	target
-		.canonicalize()
+		.normalize()
 		.is_ok_and(|target| target.starts_with(root) && target.is_file())
 }
 
@@ -283,15 +300,33 @@ fn run() -> Result<()> {
 }
 
 fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()> {
+	// Check that no duplicate file names exist
+	let mut names = BTreeMap::new();
+
+	for path in files {
+		let p = BasePathBuf::new(path)
+			.map_err(|e| anyhow!("failed to canonicalize the path {}: {}", path.display(), e))?;
+		let name = FileName::new(path)?;
+		match names.entry(name) {
+			Entry::Vacant(x) => {
+				x.insert(p);
+			}
+			Entry::Occupied(x) if x.get() == &p => (),
+			Entry::Occupied(x) => bail!(
+				"duplicate file names:\n- {}\n- {}",
+				x.get().as_path().display(),
+				p.as_path().display()
+			),
+		}
+	}
+
 	fs::create_dir_all(dir)?;
 	let mut buf = String::with_capacity(8 << 10);
 	let mut file_buf = String::with_capacity(8 << 10);
 
-	for p in files.iter() {
-		let mut out = dir.join(
-			p.file_name()
-				.ok_or_else(|| anyhow!("cannot determine the file name for {}", p.display()))?,
-		);
+	for (name, p) in &names {
+		let p = p.as_path();
+		let mut out = dir.join(name.name());
 		out.set_extension("html");
 
 		file_buf.clear();
@@ -316,10 +351,7 @@ fn convert_all(dir: &Path, opts: &RenderOptions, files: &[PathBuf]) -> Result<()
 
 fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path, skip_hidden: bool) -> Result<()> {
 	fs::create_dir_all(out)?;
-	let dir = match dir.canonicalize() {
-		Err(_) => Borrowed(dir),
-		Ok(x) => Cow::Owned(x),
-	};
+	let dir = BasePathBuf::new(dir)?;
 
 	let mut buf = String::with_capacity(8 << 10);
 	let mut file_buf = String::with_capacity(8 << 10);
@@ -360,11 +392,11 @@ fn convert_dir(out: &Path, opts: &RenderOptions, dir: &Path, skip_hidden: bool) 
 				if opts.convert_base_urls || !dest.starts_with('/') =>
 			{
 				let (url, rest) = split_url(&dest);
-				if skip_hidden && has_hidden(url) {
+				if (skip_hidden && has_hidden(url)) || !is_in_dir(&dir, &p, url) {
 					return Event::Start(Tag::Link(typ, dest, title));
 				}
 				match url.strip_suffix(".md") {
-					Some(without_ext) if is_in_dir(&dir, &p, url) => Event::Start(Tag::Link(
+					Some(without_ext) => Event::Start(Tag::Link(
 						typ,
 						format!("{without_ext}.html{rest}").into(),
 						title,
