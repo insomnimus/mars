@@ -3,13 +3,13 @@
   "on": {
     "push": {
       "paths-ignore": [
-        "**.md",
+        "readme.md",
         "LICENSE"
       ]
     },
     "pull_request": {
       "paths-ignore": [
-        "**.md",
+        "readme.md",
         "LICENSE"
       ]
     }
