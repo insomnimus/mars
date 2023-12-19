@@ -66,7 +66,7 @@ impl FormatArg {
 						error(
 							&arg,
 							orig_val,
-							"value must be 'tabs' 'spaces' or a non-negative integer",
+							"value must be 'tabs', 'spaces' or a non-negative integer",
 						)
 					}),
 			},
