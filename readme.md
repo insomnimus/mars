@@ -7,6 +7,7 @@ Mars is a Markdown to HTML convertion tool.
 - Can convert an entire directory, preserving the filesystem hierarchy
 - While converting a directory, convert relative markdown links in documents to .html if the specified file exists
 - Self contained and lean executable
+- Automatic pretty formatting of generated HTML through statically linked [libtidy](https://github.com/htacg/tidy-html5)
 - Lets you insert custom CSS, scripts or raw HTML into `<head>`
 - Minimal memory footprint
 
@@ -15,7 +16,12 @@ Grab a binary from [the releases page](https://github.com/insomnimus/mars/releas
 
 Or build from source:
 ## Building From Source
-You need a working rust toolchain version 1.74.0 or newer.
+You will need:
+- A working rust toolchain version 1.74.0 or newer
+- clang, for generating libtidy bindings on the go
+- CMake and a C compiler, to build libtidy from source
+
+you don't need libtidy installed. [tidy-sys](https://github.com/insomnimus/tidy-sys) takes care of it automatically.
 
 ```shell
 # The file will be located in `target/release/mars` (with a .exe suffix on Windows)

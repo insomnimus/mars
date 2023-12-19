@@ -9,19 +9,18 @@ license = "MIT"
 lto = "fat"
 panic = "abort"
 
-[profile.dev.package.askama_derive]
-opt-level = 1
-
 [dependencies]
 anyhow = "1.0.75"
 askama = { version = "0.12.1", default-features = false, features = ["urlencode"] }
 clap = { version = "4.4.10", features = ["derive", "cargo"] }
 indexmap = { version = "2.1.0", features = ["serde"] }
 jwalk = "0.8.1"
+log = "0.4.20"
 normpath = "1.1.1"
 pulldown-cmark = { version = "0.9.3", default-features = false, features = ["simd"] }
 serde = { version = "1.0.193", features = ["derive"] }
 serde_yaml = "0.9.27"
+tidier = "0.2.0"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.52.0", features = ["Win32_Foundation", "Win32_Storage", "Win32_Storage_FileSystem"] }
