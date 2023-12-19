@@ -130,5 +130,5 @@ impl FormatArg {
 }
 
 pub fn show_help() {
-	todo!();
+	println!("{}", include_str!("../docs/formatting-options.md").trim());
 }

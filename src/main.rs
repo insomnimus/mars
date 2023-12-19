@@ -334,6 +334,7 @@ fn run() -> Result<()> {
 
 	if c.help_format {
 		pretty::show_help();
+		return Ok(());
 	}
 
 	logger::init(if c.verbose { Level::Info } else { Level::Warn });
