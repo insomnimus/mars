@@ -97,3 +97,6 @@ If the text between `---` does not contain valid YAML, it is not considered a me
 	- The values specified on the command line are appended to values specified in the source.
 	- If the `--normalize-css` flag is used, the `Normalize.css` import will be put on top.
 	- If the `--sakura-css` flag is used, the `Sakura.css` import will be last.
+## Formatting Options
+You can learn about the possible knobs at [docs/formatting-options.md](docs/formatting-options.md).<br>
+The same content is also available through the `--help-format` option.
