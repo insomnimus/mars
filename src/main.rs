@@ -75,7 +75,7 @@ struct Cmd {
 	#[arg(required_unless_present = "help_format")]
 	path: Vec<PathBuf>,
 
-	/// Do not ignore hidden files and directories
+	/// Do not ignore hidden files and directories while converting directories
 	#[arg(short, long)]
 	all: bool,
 
