@@ -330,6 +330,11 @@ fn has_hidden(url: &str) -> bool {
 }
 
 fn run() -> Result<()> {
+	#[cfg(debug_assertions)]
+	{
+		use clap::CommandFactory;
+		Cmd::command().debug_assert();
+	}
 	let c = Cmd::parse();
 
 	if c.help_format {
