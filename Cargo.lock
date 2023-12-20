@@ -681,9 +681,9 @@ dependencies = [
 
 [[package]]
 name = "tidier"
-version = "0.3.0"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b547bbba9af5111ba4cbf90da1122967d0ecb3127c6af4bf6a56e4f5433af5b"
+checksum = "ce536357b268a389735f059b9527b2bc53fe12c5de2709246ac8e67f03a866e5"
 dependencies = [
  "errno",
  "memchr",
@@ -692,9 +692,9 @@ dependencies = [
 
 [[package]]
 name = "tidy-sys"
-version = "0.5.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64ddd6a498d3fd28a92b62c81406a56c93fe3ca51ac12e39ea27395732c742b3"
+checksum = "a4aa779f762f7bd7e14d0d0d9a8523554c838f109d2750ed8537de56f18b101f"
 dependencies = [
  "bindgen",
  "cmake",
