@@ -681,9 +681,9 @@ dependencies = [
 
 [[package]]
 name = "tidier"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ded09958185dc1fc113c981a3fa8642aa596da5f386c7e798a26ca9ea6714a2"
+checksum = "5b547bbba9af5111ba4cbf90da1122967d0ecb3127c6af4bf6a56e4f5433af5b"
 dependencies = [
  "errno",
  "memchr",
