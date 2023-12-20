@@ -8,6 +8,10 @@ license = "MIT"
 [profile.release]
 lto = "fat"
 panic = "abort"
+strip = "symbols"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.52.0", features = ["Win32_Foundation", "Win32_Storage", "Win32_Storage_FileSystem"] }
 
 [dependencies]
 anyhow = "1.0.75"
@@ -21,6 +25,3 @@ pulldown-cmark = { version = "0.9.3", default-features = false, features = ["sim
 serde = { version = "1.0.193", features = ["derive"] }
 serde_yaml = "0.9.27"
 tidier = "0.3.0"
-
-[target.'cfg(windows)'.dependencies]
-windows = { version = "0.52.0", features = ["Win32_Foundation", "Win32_Storage", "Win32_Storage_FileSystem"] }
