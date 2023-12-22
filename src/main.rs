@@ -227,14 +227,15 @@ impl Buffer {
 	#[allow(clippy::new_without_default)]
 	pub fn new() -> Self {
 		Self {
-			buf: String::with_capacity(8 << 10),
-			body: String::with_capacity(8 << 10),
-			rendered: String::with_capacity(8 << 10),
+			buf: String::new(),
+			body: String::new(),
+			rendered: String::new(),
 		}
 	}
 
 	pub fn read_file(&mut self, p: &Path) -> Result<()> {
 		self.buf.clear();
+		todo!("fstat the file and allocate enough space");
 		File::open(p)
 			.and_then(|mut f| f.read_to_string(&mut self.buf))
 			.map_err(|e| anyhow!("failure reading file {}: {}", p.display(), e))?;

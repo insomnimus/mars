@@ -35,8 +35,7 @@ impl FormatArg {
 		use FormatArg::*;
 
 		let (orig_arg, orig_val) = s
-			.split_once(':')
-			.or_else(|| s.split_once('='))
+			.split_once(|c: char| c == ':' || c == '=')
 			.unwrap_or((s, ""));
 
 		let orig_arg = orig_arg.trim();
