@@ -235,10 +235,19 @@ impl Buffer {
 
 	pub fn read_file(&mut self, p: &Path) -> Result<()> {
 		self.buf.clear();
-		todo!("fstat the file and allocate enough space");
+
+		let md =
+			fs::metadata(p).map_err(|e| anyhow!("failure reading file {}: {}", p.display(), e))?;
+
+		self.buf.reserve(usize::min(
+			500 << 20,
+			usize::try_from(md.len()).unwrap_or(usize::MAX),
+		));
+
 		File::open(p)
 			.and_then(|mut f| f.read_to_string(&mut self.buf))
 			.map_err(|e| anyhow!("failure reading file {}: {}", p.display(), e))?;
+
 		Ok(())
 	}
 

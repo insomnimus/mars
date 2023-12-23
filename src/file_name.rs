@@ -84,8 +84,7 @@ mod win {
 		}
 	}
 
-	pub fn real_name<P: AsRef<Path>>(p: P) -> Option<OsString> {
-		let p = p.as_ref();
+	fn real_name(p: &Path) -> Option<OsString> {
 		if p.as_os_str()
 			.as_encoded_bytes()
 			.iter()
