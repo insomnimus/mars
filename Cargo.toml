@@ -13,7 +13,7 @@ argfile = []
 lto = "fat"
 panic = "abort"
 codegen-units = 1
-strip = "symbols"
+#strip = "symbols"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.52.0", features = ["Win32_Foundation", "Win32_Storage", "Win32_Storage_FileSystem"] }
