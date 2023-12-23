@@ -60,8 +60,12 @@ use self::{
 	pretty::FormatArg,
 };
 
+const HELP_FOOTER: &str = "\
+The source code is available at https://github.com/insomnimus/mars
+Copyright 2023 Taylan Gökkaya; Apache license v2.0";
+
 #[derive(ArgParser)]
-#[command(version)]
+#[command(version, after_help = HELP_FOOTER)]
 /// Converts Markdown files into HTML
 struct Cmd {
 	/// Write output to a file
@@ -303,7 +307,7 @@ fn split_url(url: &str) -> (&str, &str) {
 	}
 }
 
-/// `root` must be canonicalized.
+/// `root` must be normalized.
 fn is_in_dir(root: &BasePath, file_path: &Path, url: &str) -> bool {
 	#[cfg(not(windows))]
 	if url.contains(':') {

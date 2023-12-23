@@ -3,11 +3,12 @@ name = "mars"
 description = "A markdown to html converter"
 version = "0.10.0-pre"
 edition = "2021"
-license = "MIT"
+license = "Apache-2.0"
 
 [profile.release]
 lto = "fat"
 panic = "abort"
+codegen-units = 1
 strip = "symbols"
 
 [target.'cfg(windows)'.dependencies]
