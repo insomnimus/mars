@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #[cfg(not(windows))]
 pub use non_win::FileName;
 #[cfg(windows)]
