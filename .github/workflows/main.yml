@@ -108,8 +108,50 @@
               "native": false
             },
             {
+              "name": "mars-x86_64-unknown-linux-gnu.tar.xz",
+              "target": "x86_64-unknown-linux-gnu",
+              "os": "ubuntu-latest",
+              "native": true
+            },
+            {
+              "name": "mars-i686-unknown-linux-gnu.tar.xz",
+              "target": "i686-unknown-linux-gnu",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-aarch64-unknown-linux-gnu.tar.xz",
+              "target": "aarch64-unknown-linux-gnu",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-armv7-unknown-linux-gnueabihf.tar.xz",
+              "target": "armv7-unknown-linux-gnueabihf",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-arm-unknown-linux-gnueabihf.tar.xz",
+              "target": "arm-unknown-linux-gnueabihf",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
+              "name": "mars-arm-unknown-linux-gnueabi.tar.xz",
+              "target": "arm-unknown-linux-gnueabi",
+              "os": "ubuntu-latest",
+              "native": false
+            },
+            {
               "name": "mars-x86_64-apple-darwin.tar.xz",
               "target": "x86_64-apple-darwin",
+              "os": "macos-latest",
+              "native": true
+            },
+            {
+              "name": "mars-aarch64-apple-darwin.tar.xz",
+              "target": "aarch64-apple-darwin",
               "os": "macos-latest",
               "native": true
             }

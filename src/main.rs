@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "argfile")]
+mod argfile;
 mod file_name;
 mod logger;
 mod pretty;
@@ -15,6 +17,7 @@ use std::{
 		btree_map::Entry,
 		BTreeMap,
 	},
+	ffi::OsString,
 	fs::{
 		self,
 		File,
@@ -66,9 +69,9 @@ const HELP_FOOTER: &str = "\
 The source code is available at https://github.com/insomnimus/mars
 Copyright 2023 Taylan Gökkaya; Apache license v2.0";
 
+/// Converts Markdown files to HTML
 #[derive(ArgParser)]
-#[command(version, after_help = HELP_FOOTER)]
-/// Converts Markdown files into HTML
+#[command(version, after_help = HELP_FOOTER, args_override_self = true)]
 struct Cmd {
 	/// Write output to a file
 	#[arg(short, long, group = "output")]
@@ -351,7 +354,8 @@ fn run() -> Result<()> {
 		use clap::CommandFactory;
 		Cmd::command().debug_assert();
 	}
-	let c = Cmd::parse();
+	let args = get_args();
+	let c = Cmd::parse_from(args);
 
 	if c.help_format {
 		pretty::show_help();
@@ -503,6 +507,17 @@ fn convert_dir(
 	}
 
 	Ok(())
+}
+
+fn get_args() -> impl IntoIterator<Item = OsString> {
+	#[cfg(feature = "argfile")]
+	{
+		argfile::get_args()
+	}
+	#[cfg(not(feature = "argfile"))]
+	{
+		std::env::args_os()
+	}
 }
 
 fn main() {

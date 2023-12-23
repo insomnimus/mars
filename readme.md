@@ -31,6 +31,13 @@ cargo build --release
 cargo install --path .
 ```
 
+### Build Configuration / Crate Features
+Currently there's only one feature you can turn on/off:
+- `argfile`: Enables loading arguments from argfiles if the `MARS_CONFIG_PATH` environment variable points to a file during runtime. This feature is enabled by default.
+
+To disable all features enabled by default, pass `--no-default-features` on the command line while building or installing mars.
+
+
 ## Usage
 There are 4 modes of operation:
 - Single input file, no output file: prints to stdout: `mars foo.md`
@@ -100,3 +107,40 @@ If the text between `---` does not contain valid YAML, it is not considered a me
 ## Formatting Options
 You can learn about the possible knobs at [docs/formatting-options.md](docs/formatting-options.md).<br>
 The same content is also available through the `--help-format` option.
+
+## Config File Syntax
+If the `argfile` feature is enabled (it is by default), mars will load extra arguments from the file pointed to by the `MARS_CONFIG_PATH` environment variable.
+
+If the environment variable is not set, or if reading the contents of the file fails, no configuration will be loaded.
+Errors while reading the file are silently ignored.
+
+- The file must contain any number of command line options per line.
+- Each line is trimmed of whitespace.
+- Empty lines and lines starting with `#` are ignored (after trimming whitespace).
+- No escaping or quoting is done; each line is simply an argument.
+
+### Example Config File
+```conf
+# Mars configuration
+
+# set the default language
+--lang=en
+# Always use Normalize.css
+--normalize-css
+
+# Use tabs by default
+-findent=tabs
+
+# If you want to use long names of options, the value must be on a separate line:
+--format
+wrap=100
+# Or, use =
+--format=indent=8
+
+# Names and values of format options are trimmed.
+# Names and avlues of format options are also case insensitive.
+# Finally, you can use `:` or `=` to separate format key/value pairs:
+-fEOL: crlf
+# Or
+-feol = crlf
+```
