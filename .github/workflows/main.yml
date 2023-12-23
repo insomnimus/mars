@@ -108,40 +108,10 @@
               "native": false
             },
             {
-              "name": "mars-powerpc-unknown-linux-gnu.tar.xz",
-              "target": "powerpc-unknown-linux-gnu",
-              "os": "ubuntu-latest",
-              "native": false
-            },
-            {
-              "name": "mars-powerpc64-unknown-linux-gnu.tar.xz",
-              "target": "powerpc64-unknown-linux-gnu",
-              "os": "ubuntu-latest",
-              "native": false
-            },
-            {
-              "name": "mars-powerpc64le-unknown-linux-gnu.tar.xz",
-              "target": "powerpc64le-unknown-linux-gnu",
-              "os": "ubuntu-latest",
-              "native": false
-            },
-            {
               "name": "mars-x86_64-apple-darwin.tar.xz",
               "target": "x86_64-apple-darwin",
               "os": "macos-latest",
               "native": true
-            },
-            {
-              "name": "mars-x86_64-unknown-freebsd.tar.xz",
-              "target": "x86_64-unknown-freebsd",
-              "os": "ubuntu-latest",
-              "native": false
-            },
-            {
-              "name": "mars-x86_64-unknown-netbsd.tar.xz",
-              "target": "x86_64-unknown-netbsd",
-              "os": "ubuntu-latest",
-              "native": false
             }
           ]
         }
@@ -168,7 +138,7 @@
         {
           "name": "setup rustup (cross)",
           "if": "!matrix.native",
-          "run": "rustup update\nrustup default nightly\ncargo install cross"
+          "run": "rustup update\nrustup default nightly\nrustup component add rust-src\ncargo install cross"
         },
         {
           "name": "build (native)",
