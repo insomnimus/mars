@@ -37,7 +37,6 @@ mod win {
 
 	pub struct FileName {
 		name: OsString,
-		#[cfg(windows)]
 		upper: String,
 	}
 
