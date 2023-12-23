@@ -168,22 +168,22 @@
         {
           "name": "setup rustup (cross)",
           "if": "!matrix.native",
-          "run": "rustup update\ncargo install cross"
+          "run": "rustup update\nrustup default nightly\ncargo install cross"
         },
         {
           "name": "build (native)",
           "if": "matrix.native",
-          "run": "cargo rustc --release --target ${{ matrix.target }} -Z 'build-std=std,alloc,core,panic_abort' -- -Clto -Copt-level=2"
+          "run": "cargo rustc --release --target ${{ matrix.target }} '-Zbuild-std=core,alloc,std,panic_abort' -- -Copt-level=2"
         },
         {
           "name": "build (cross)",
           "if": "!matrix.native",
-          "run": "cross rustc --release --target ${{ matrix.target }} -- -Clto -Copt-level=2"
+          "run": "cross rustc --release --target ${{ matrix.target }} ${{ matrix.target == 'x86_64-unknown-linux-musl' && '-Zbuild-std=core,alloc,std,panic_abort' || '' }} -- -Copt-level=2"
         },
         {
           "name": "archive executable",
           "if": "matrix.os != 'windows-latest'",
-          "run": "cd target/${{ matrix.target }}/release\nstrip mars || true\ntar cJf ../../../${{ matrix.name }} mars\ncd -"
+          "run": "cd target/${{ matrix.target }}/release\ntar cJf ../../../${{ matrix.name }} mars\ncd -"
         },
         {
           "name": "archive executable",
