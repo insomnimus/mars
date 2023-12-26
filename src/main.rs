@@ -234,7 +234,7 @@ pub struct Buffer {
 
 impl Buffer {
 	#[allow(clippy::new_without_default)]
-	pub fn new() -> Self {
+	fn new() -> Self {
 		Self {
 			buf: String::new(),
 			body: String::new(),
@@ -242,7 +242,7 @@ impl Buffer {
 		}
 	}
 
-	pub fn read_file(&mut self, p: &Path) -> Result<()> {
+	fn read_file(&mut self, p: &Path) -> Result<()> {
 		self.buf.clear();
 
 		let md =
