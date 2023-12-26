@@ -120,7 +120,7 @@ impl FormatArg {
 			IndentCdata(x) => o.indent.cdata = x,
 			Wrap(x) => o.wrap = x,
 			RemoveComments(x) => o.strip_comments = x,
-			Eol(x) => o.line_ending = x,
+			Eol(x) => o.eol = x,
 			JoinClasses(x) => o.join_classes = x,
 			JoinStyles(x) => o.join_styles = x,
 			NewlineAfterBr(x) => o.br_newline = x,

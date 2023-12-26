@@ -1,7 +1,7 @@
 [package]
 name = "mars"
 description = "A markdown to html converter"
-version = "0.11.0"
+version = "0.11.1"
 edition = "2021"
 license = "Apache-2.0"
 
@@ -19,14 +19,14 @@ strip = "symbols"
 windows = { version = "0.52.0", features = ["Win32_Foundation", "Win32_Storage", "Win32_Storage_FileSystem"] }
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.76"
 askama = { version = "0.12.1", default-features = false, features = ["urlencode"] }
-clap = { version = "4.4.10", features = ["derive", "cargo"] }
+clap = { version = "4.4.11", features = ["derive", "cargo"] }
 indexmap = { version = "2.1.0", features = ["serde"] }
 jwalk = "0.8.1"
 log = "0.4.20"
 normpath = "1.1.1"
 pulldown-cmark = { version = "0.9.3", default-features = false, features = ["simd"] }
 serde = { version = "1.0.193", features = ["derive"] }
-serde_yaml = "0.9.27"
-tidier = "0.3.2"
+serde_yaml = "0.9.29"
+tidier = "0.4.0"
