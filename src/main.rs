@@ -94,10 +94,12 @@ struct Cmd {
 	/// Do not pretty format output
 	#[arg(short = 'F', long)]
 	no_format: bool,
-
 	/// Set a formatting option using the `key=value` or `key:value` syntax
 	#[arg(short = 'f', long, value_parser = FormatArg::parse)]
 	format: Vec<FormatArg>,
+	/// Fail on formatting errors instead of writing the unformatted HTML
+	#[arg(long)]
+	format_error_exit: bool,
 
 	/// Display a list of formatting options for use with --format
 	#[arg(long)]
@@ -223,13 +225,20 @@ impl<'b, 'a> Doc<'b, 'a> {
 	}
 }
 
-pub struct Buffer {
+#[derive(Copy, Clone)]
+struct Context<'a> {
+	ro: &'a RenderOptions,
+	fo: Option<&'a FormatOptions>,
+	format_error_exit: bool,
+}
+
+struct Buffer {
 	// Stores the original markdown input or the formatted final output
-	pub buf: String,
+	buf: String,
 	// original -> rendered body
-	pub body: String,
+	body: String,
 	// body -> askama template
-	pub rendered: String,
+	rendered: String,
 }
 
 impl Buffer {
@@ -260,21 +269,22 @@ impl Buffer {
 		Ok(())
 	}
 
-	fn render<F>(&mut self, ro: &RenderOptions, fo: Option<&FormatOptions>, map: F) -> Result<&str>
+	fn render<F>(&mut self, ctx: Context, map: F) -> Result<&str>
 	where
 		F: FnMut(Event) -> Event,
 	{
 		self.rendered.clear();
 		self.body.clear();
-		Doc::new(&mut self.body, &self.buf, ro, map).render_into(&mut self.rendered)?;
+		Doc::new(&mut self.body, &self.buf, ctx.ro, map).render_into(&mut self.rendered)?;
 
-		if let Some(fo) = fo {
+		if let Some(fo) = ctx.fo {
 			self.buf.clear();
 			self.rendered.push('\0');
-			tidier::format_to(&self.rendered, &mut self.buf, false, fo)
-				.map_err(|e| anyhow!("formatting error: {e}"))?;
-
-			Ok(&self.buf)
+			match tidier::format_to(&self.rendered, &mut self.buf, false, fo) {
+				Ok(_) => Ok(&self.buf),
+				Err(e) if ctx.format_error_exit => Err(anyhow!("formatting error: {e}")),
+				Err(_) => Ok(&self.rendered),
+			}
 		} else {
 			Ok(&self.rendered)
 		}
@@ -354,6 +364,7 @@ fn run() -> Result<()> {
 		use clap::CommandFactory;
 		Cmd::command().debug_assert();
 	}
+
 	let args = get_args();
 	let c = Cmd::parse_from(args);
 
@@ -365,18 +376,24 @@ fn run() -> Result<()> {
 	logger::init(if c.verbose { Level::Info } else { Level::Warn });
 
 	let fo = (!c.no_format).then(|| {
-		let mut fo = FormatOptions::default();
+		let mut fo = FormatOptions::new();
 		for o in &c.format {
 			o.apply(&mut fo);
 		}
 		fo
 	});
 
+	let ctx = Context {
+		fo: fo.as_ref(),
+		ro: &c.opts,
+		format_error_exit: c.format_error_exit,
+	};
+
 	if let Some(dir) = &c.out_dir {
 		if c.path.len() == 1 && c.path[0].is_dir() {
-			convert_dir(dir, &c.path[0], !c.all, &c.opts, fo.as_ref())
+			convert_dir(dir, &c.path[0], !c.all, ctx)
 		} else {
-			convert_all(dir, &c.path, &c.opts, fo.as_ref())
+			convert_all(dir, &c.path, ctx)
 		}
 	} else if c.path.len() != 1 {
 		bail!("cannot write multiple files into one; use the --out-dir option instead");
@@ -395,7 +412,7 @@ fn run() -> Result<()> {
 			buf: data,
 		};
 
-		let html = buf.render(&c.opts, fo.as_ref(), |x| x)?;
+		let html = buf.render(ctx, |x| x)?;
 		match c.out.as_ref() {
 			Some(p) if p.as_os_str() != "-" => fs::write(p, html)?,
 			_ => print!("{html}"),
@@ -404,12 +421,7 @@ fn run() -> Result<()> {
 	}
 }
 
-fn convert_all(
-	dir: &Path,
-	files: &[PathBuf],
-	ro: &RenderOptions,
-	fo: Option<&FormatOptions>,
-) -> Result<()> {
+fn convert_all(dir: &Path, files: &[PathBuf], ctx: Context) -> Result<()> {
 	// Check that no duplicate file names exist
 	let mut names = BTreeMap::new();
 
@@ -439,7 +451,7 @@ fn convert_all(
 		out.set_extension("html");
 
 		buf.read_file(p)?;
-		let html = buf.render(ro, fo, |x| x)?;
+		let html = buf.render(ctx, |x| x)?;
 		fs::write(&out, html).map_err(|e| anyhow!("rendering to {} failed: {}", p.display(), e))?;
 
 		info!("{}", out.display());
@@ -448,13 +460,7 @@ fn convert_all(
 	Ok(())
 }
 
-fn convert_dir(
-	out: &Path,
-	dir: &Path,
-	skip_hidden: bool,
-	ro: &RenderOptions,
-	fo: Option<&FormatOptions>,
-) -> Result<()> {
+fn convert_dir(out: &Path, dir: &Path, skip_hidden: bool, ctx: Context) -> Result<()> {
 	fs::create_dir_all(out)?;
 	let dir = BasePathBuf::new(dir)?;
 
@@ -481,10 +487,10 @@ fn convert_dir(
 				.map_err(|e| anyhow!("failed to create directory {}: {}", parent.display(), e))?;
 		}
 
-		let html = buf.render(ro, fo, |event| match event {
-			_ if ro.no_convert_urls => event,
+		let html = buf.render(ctx, |event| match event {
+			_ if ctx.ro.no_convert_urls => event,
 			Event::Start(Tag::Link(typ, dest, title))
-				if ro.convert_base_urls || !dest.starts_with('/') =>
+				if ctx.ro.convert_base_urls || !dest.starts_with('/') =>
 			{
 				let (url, rest) = split_url(&dest);
 				if (skip_hidden && has_hidden(url)) || !is_in_dir(&dir, &p, url) {
