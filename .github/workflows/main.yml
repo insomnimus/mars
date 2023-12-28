@@ -24,7 +24,7 @@
               "target": "x86_64-unknown-linux-gnu"
             },
             {
-              "os": "macOS-11",
+              "os": "macOS-latest",
               "target": "x86_64-apple-darwin"
             },
             {
