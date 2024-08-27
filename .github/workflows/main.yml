@@ -42,7 +42,7 @@
         },
         {
           "name": "update rust",
-          "run": "rustup update"
+          "run": "rustup update && rustup target add ${{ matrix.target }}"
         },
         {
           "name": "run tests",
