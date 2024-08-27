@@ -173,21 +173,22 @@ impl<'b, 'a> Doc<'b, 'a> {
 		const WHITESPACE: &[char] = &[' ', '\t', '\n', '\r'];
 		let s = source.trim_start_matches(WHITESPACE);
 
-		let (mut md, body) =
-			s.strip_prefix("---")
-				.filter(|s| s.starts_with('\n') || s.starts_with("\r\n"))
-				.and_then(|s| {
-					s.split_once("\n---").filter(|(_, body)| {
-						body.starts_with('\n')
-							|| body.starts_with("\r\n") || body.trim_matches(WHITESPACE).is_empty()
-					})
+		let (mut md, body) = s
+			.strip_prefix("---")
+			.filter(|s| s.starts_with('\n') || s.starts_with("\r\n"))
+			.and_then(|s| {
+				s.split_once("\n---").filter(|(_, body)| {
+					body.starts_with('\n')
+						|| body.starts_with("\r\n")
+						|| body.trim_matches(WHITESPACE).is_empty()
 				})
-				.and_then(|(md, body)| {
-					serde_yaml::from_str::<Metadata>(md)
-						.ok()
-						.map(|md| (md, body))
-				})
-				.unwrap_or_else(|| (Metadata::default(), s.trim_matches(WHITESPACE)));
+			})
+			.and_then(|(md, body)| {
+				serde_yaml::from_str::<Metadata>(md)
+					.ok()
+					.map(|md| (md, body))
+			})
+			.unwrap_or_else(|| (Metadata::default(), s.trim_matches(WHITESPACE)));
 
 		let hard_breaks = md.hard_breaks.unwrap_or(opts.hard_breaks);
 
@@ -489,20 +490,34 @@ fn convert_dir(out: &Path, dir: &Path, skip_hidden: bool, ctx: Context) -> Resul
 
 		let html = buf.render(ctx, |event| match event {
 			_ if ctx.ro.no_convert_urls => event,
-			Event::Start(Tag::Link(typ, dest, title))
-				if ctx.ro.convert_base_urls || !dest.starts_with('/') =>
-			{
-				let (url, rest) = split_url(&dest);
+			Event::Start(Tag::Link {
+				link_type,
+				dest_url,
+				title,
+				id,
+			}) if ctx.ro.convert_base_urls || !dest_url.starts_with('/') => {
+				let (url, rest) = split_url(&dest_url);
 				if (skip_hidden && has_hidden(url)) || !is_in_dir(&dir, &p, url) {
-					return Event::Start(Tag::Link(typ, dest, title));
+					return Event::Start(Tag::Link {
+						link_type,
+						dest_url,
+						title,
+						id,
+					});
 				}
 				match url.strip_suffix(".md") {
-					Some(without_ext) => Event::Start(Tag::Link(
-						typ,
-						format!("{without_ext}.html{rest}").into(),
+					Some(without_ext) => Event::Start(Tag::Link {
+						link_type,
+						dest_url: format!("{without_ext}.html{rest}").into(),
 						title,
-					)),
-					_ => Event::Start(Tag::Link(typ, dest, title)),
+						id,
+					}),
+					_ => Event::Start(Tag::Link {
+						link_type,
+						dest_url,
+						title,
+						id,
+					}),
 				}
 			}
 			_ => event,

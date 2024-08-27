@@ -36,9 +36,7 @@ impl FormatArg {
 	pub fn parse(s: &str) -> Result<Self, String> {
 		use FormatArg::*;
 
-		let (orig_arg, orig_val) = s
-			.split_once(|c: char| c == ':' || c == '=')
-			.unwrap_or((s, ""));
+		let (orig_arg, orig_val) = s.split_once([':', '=']).unwrap_or((s, ""));
 
 		let orig_arg = orig_arg.trim();
 		let arg = orig_arg.to_lowercase();
