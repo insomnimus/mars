@@ -38,7 +38,7 @@ Put a newline and indent after each attribute.
 - type: bool
 - default: off
 
-# indent-cdata
+## indent-cdata
 Indent contents of `<![CDATA[]]]>` tags.
 - type: bool
 - default: off
