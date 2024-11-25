@@ -1,9 +1,9 @@
 [package]
 name = "mars"
 description = "A markdown to html converter"
-version = "0.13.1"
+version = "0.13.2"
 edition = "2021"
-license = "Apache-2.0"
+license = "MIT"
 
 [features]
 default = ["argfile"]

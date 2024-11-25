@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT
 
 #[cfg(feature = "argfile")]
 mod argfile;
@@ -67,7 +67,7 @@ use self::{
 
 const HELP_FOOTER: &str = "\
 The source code is available at https://github.com/insomnimus/mars
-Copyright 2023 Taylan Gökkaya; Apache license v2.0";
+Copyright 2023 Taylan Gökkaya; MIT license";
 
 /// Converts Markdown files to HTML
 #[derive(ArgParser)]
