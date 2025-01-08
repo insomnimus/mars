@@ -1,7 +1,7 @@
 [package]
 name = "mars"
 description = "A markdown to html converter"
-version = "0.13.2"
+version = "0.13.3"
 edition = "2021"
 license = "MIT"
 
@@ -16,17 +16,17 @@ strip = "symbols"
 opt-level = 2
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.58.0", features = ["Win32_Foundation", "Win32_Storage", "Win32_Storage_FileSystem"] }
+windows = { version = "0.59.0", features = ["Win32_Foundation", "Win32_Storage", "Win32_Storage_FileSystem"] }
 
 [dependencies]
-anyhow = "1.0.86"
+anyhow = "1.0.95"
 askama = { version = "0.12.1", default-features = false, features = ["urlencode"] }
-clap = { version = "4.5.16", features = ["derive", "cargo"] }
-indexmap = { version = "2.4.0", features = ["serde"] }
+clap = { version = "4.5.24", features = ["derive", "cargo"] }
+indexmap = { version = "2.7.0", features = ["serde"] }
 jwalk = "0.8.1"
 log = "0.4.22"
 normpath = "1.3.0"
-pulldown-cmark = { version = "0.12.0", default-features = false, features = ["html", "simd"] }
-serde = { version = "1.0.209", features = ["derive"] }
+pulldown-cmark = { version = "0.12.2", default-features = false, features = ["html", "simd"] }
+serde = { version = "1.0.217", features = ["derive"] }
 serde_yaml = "0.9.34"
 tidier = "0.5.3"
