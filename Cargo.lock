@@ -393,7 +393,7 @@ checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
 name = "mars"
-version = "0.13.3"
+version = "0.13.4"
 dependencies = [
  "anyhow",
  "askama",
@@ -644,9 +644,9 @@ dependencies = [
 
 [[package]]
 name = "tidier"
-version = "0.5.4"
+version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9bace640fd2c4b4871a44af45a4d8d064bb2678d1867cb7cf4005334e44bf87"
+checksum = "fb2b19155889cdca3fc29a7b40376ea39e38b0537e6489d51f5e702956f0fe97"
 dependencies = [
  "errno",
  "memchr",
@@ -655,9 +655,9 @@ dependencies = [
 
 [[package]]
 name = "tidy-sys"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f87942631b9097d1ba206639674121eab11ab28f18950e1aa12a96a40002340"
+checksum = "89acc502aaf1f3005ea12a578c0bb0cf10b0a1be36dda86d6c9cff0bfe4be8e8"
 dependencies = [
  "bindgen",
  "cmake",
