@@ -329,6 +329,8 @@ fn is_in_dir(root: &BasePath, file_path: &Path, url: &str) -> bool {
 	if url.contains(':') {
 		return false;
 	}
+	
+	
 	#[cfg(windows)]
 	if is_illegal_filepath(url) {
 		return false;
@@ -341,10 +343,11 @@ fn is_in_dir(root: &BasePath, file_path: &Path, url: &str) -> bool {
 		return false;
 	};
 
+	let url = percent_encoding::percent_decode_str(url).decode_utf8().unwrap();
 	let target = url
 		.strip_prefix('/')
 		.map(|rest| root.join(rest))
-		.unwrap_or_else(|| parent.join(url));
+		.unwrap_or_else(|| parent.join(&*url));
 
 	target
 		.normalize()
